@@ -10,6 +10,12 @@
 F:\anaconda\envs\py37
 ```
 
+安装项目依赖：
+
+```powershell
+& "F:\anaconda\envs\py37\python.exe" -m pip install -r requirements.txt
+```
+
 建议从项目目录运行：
 
 ```powershell
@@ -24,7 +30,7 @@ Set-Location "G:\Users\weili\Desktop\fatigue steer_detect"
 | 库 | 版本 |
 | --- | --- |
 | Python | 3.7.4 |
-| opencv-python / cv2 | 4.7.0 |
+| opencv-python / cv2 | 4.7.0.72 |
 | dlib | 19.24.0 |
 | imutils | 0.5.4 |
 | scipy | 1.7.3 |
@@ -38,6 +44,7 @@ Set-Location "G:\Users\weili\Desktop\fatigue steer_detect"
 | `pilao_steer.py` | 较早的眼睛闭合/眨眼疲劳检测示例。 |
 | `emotion_detected.py` | 表情识别示例，单独运行才会执行。 |
 | `smile_detect.py` | 微笑/开心状态检测示例，单独运行才会执行。 |
+| `requirements.txt` | Python 第三方依赖版本清单。 |
 | `shape_predictor_68_face_landmarks.dat` | dlib 官方 68 点人脸关键点预测模型。 |
 
 ## 为什么没有“弹出人脸、人眼、嘴巴模型”
