@@ -9,6 +9,11 @@ import time
 import dlib
 import cv2
 import math
+from pathlib import Path
+
+# 项目根目录：让模型文件路径跟随 main.py 所在目录，避免从其他目录运行时找不到 dat 模型。
+PROJECT_DIR = Path(__file__).resolve().parent
+PREDICTOR_PATH = PROJECT_DIR / "shape_predictor_68_face_landmarks.dat"
  
 # 世界坐标系(UVW)：填写3D参考点，该模型参考http://aifi.isr.uc.pt/Downloads/OpenGL/glAnthropometric3DModel.cpp
 object_pts = np.float32([[6.825897, 6.760612, 4.402142],  #33左眉左上角
@@ -126,7 +131,9 @@ print("[INFO] loading facial landmark predictor...")
 # 第一步：使用dlib.get_frontal_face_detector() 获得脸部位置检测器
 detector = dlib.get_frontal_face_detector()
 # 第二步：使用dlib.shape_predictor获得脸部特征位置检测器
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+if not PREDICTOR_PATH.exists():
+    raise FileNotFoundError("未找到人脸68点模型文件：{}".format(PREDICTOR_PATH))
+predictor = dlib.shape_predictor(str(PREDICTOR_PATH))
  
 # 第三步：分别获取左右眼面部标志的索引
 (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
@@ -135,11 +142,17 @@ predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
 # 第四步：打开cv2 本地摄像头
 cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    raise RuntimeError("无法打开摄像头0，请检查摄像头权限、是否被其他程序占用，或尝试修改 VideoCapture 的编号。")
+cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
  
 # 从视频流循环帧
 while True:
     # 第五步：进行循环，读取图片，并对图片做维度扩大，并进灰度化
     ret, frame = cap.read()
+    if not ret or frame is None:
+        print("[ERROR] 摄像头画面读取失败，程序停止。")
+        break
     #frame = imutils.resize(frame, width=720)
     height, width, _ = frame.shape  # 获取原始图片的高度和宽度
     new_width = 720
@@ -148,6 +161,9 @@ while True:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # 第六步：使用detector(gray, 0) 进行脸部位置检测
     rects = detector(gray, 0)
+    cv2.putText(frame, "Faces: {}".format(len(rects)), (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    if len(rects) == 0:
+        cv2.putText(frame, "No face detected", (10, 60),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
     # 第七步：循环脸部位置信息，使用predictor(gray, rect)获得脸部特征位置的信息
     for rect in rects:
@@ -198,7 +214,6 @@ while True:
             COUNTER = 0
             
         # 第十四步：进行画图操作，同时使用cv2.putText将眨眼次数进行显示
-        cv2.putText(frame, "Faces: {}".format(len(rects)), (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)     
         cv2.putText(frame, "COUNTER: {}".format(COUNTER), (150, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2) 
         cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "Blinks: {}".format(TOTAL), (450, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,0), 2)
